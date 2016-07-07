@@ -84,9 +84,9 @@ func getTags(repositoryName string) {
 	}
 
 	for k, value := range tags {
-		pullCmd := fmt.Sprintf("docker pull %s/%s:%s", srcRegistry, repositoryName, k)
-		fmt.Println(pullCmd)
-		tagCmd := fmt.Sprintf("docker tag %s %s/%s:%s", value, srcRegistry, repositoryName, k)
+		//		pullCmd := fmt.Sprintf("docker pull %s/%s:%s", srcRegistry, repositoryName, k)
+		//		fmt.Println(pullCmd)
+		tagCmd := fmt.Sprintf("docker tag %s %s/%s:%s", value, dstRegistry, repositoryName, k)
 		fmt.Println(tagCmd)
 		pushCmd := fmt.Sprintf("docker push %s/%s:%s", dstRegistry, repositoryName, k)
 		fmt.Println(pushCmd)
