@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	srcRegistry = "http://127.0.0.1:5000"
+	srcRegistry = "127.0.0.1:5000"
 	dstRegistry = "reg.mydomain.com"
 	apiVer      = "v1"
 	userName    = "admin"
@@ -34,14 +34,14 @@ type SearchResult struct {
 }
 
 func init() {
-	flag.StringVar(&srcRegistry, "regsrc", "http://127.0.0.1:5000", "src registry host")
-	flag.StringVar(&dstRegistry, "regdst", "http://reg.mydomain.com", "src registry host")
+	flag.StringVar(&srcRegistry, "regsrc", "127.0.0.1:5000", "src registry host")
+	flag.StringVar(&dstRegistry, "regdst", "reg.mydomain.com", "src registry host")
 	flag.StringVar(&apiVer, "apiver", "v1", "api version")
 	flag.Parse()
 }
 
 func main() {
-	resp, err := http.Get(fmt.Sprintf("%s/%s/%s", srcRegistry, apiVer, searchUrl))
+	resp, err := http.Get(fmt.Sprintf("http://%s/%s/%s", srcRegistry, apiVer, searchUrl))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -64,7 +64,7 @@ func main() {
 }
 
 func getTags(repositoryName string) {
-	resp, err := http.Get(fmt.Sprintf("%s/%s/repositories/%s/tags", srcRegistry, apiVer, repositoryName))
+	resp, err := http.Get(fmt.Sprintf("http://%s/%s/repositories/%s/tags", srcRegistry, apiVer, repositoryName))
 	if err != nil {
 		fmt.Println(err)
 		return
