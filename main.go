@@ -1,13 +1,6 @@
 package main
 
-import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-
-	"github.com/pquerna/ffjson/ffjson"
-)
+import "flag"
 
 var (
 	srcRegistry = "127.0.0.1:5000"
@@ -15,11 +8,14 @@ var (
 	apiVer      = "v1"
 	userName    = "admin"
 	pwd         = "Harbor12345"
+	orgname     = ""
+	protocol    = "https"
 )
 
 const (
-	tagUrl    = "repositories/%s/tags"
-	searchUrl = "search"
+	tagUrl          = "repositories/%s/tags"
+	repositoriesUrl = "repositories/%s"
+	searchUrl       = "search"
 )
 
 type ImageInfo struct {
@@ -34,61 +30,19 @@ type SearchResult struct {
 }
 
 func init() {
-	flag.StringVar(&srcRegistry, "regsrc", "127.0.0.1:5000", "src registry host")
+	flag.StringVar(&protocol, "protocol", "https", "protocol")
+	flag.StringVar(&srcRegistry, "regsrc", "hub.docker.com", "src registry host")
 	flag.StringVar(&dstRegistry, "regdst", "reg.mydomain.com", "src registry host")
-	flag.StringVar(&apiVer, "apiver", "v1", "api version")
+	flag.StringVar(&apiVer, "apiver", "v2", "api version")
+	flag.StringVar(&orgname, "orgname", "rancher", "orgname")
 	flag.Parse()
 }
 
 func main() {
-	resp, err := http.Get(fmt.Sprintf("http://%s/%s/%s", srcRegistry, apiVer, searchUrl))
-	if err != nil {
-		fmt.Println(err)
-		return
+	r := &DockerRegistry{
+		results: make([]string, 0),
+		m:       make(map[string][]string),
 	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	var result SearchResult
-	err = ffjson.Unmarshal(b, &result)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	for i := range result.Results {
-		getTags(result.Results[i].Name)
-	}
-}
-
-func getTags(repositoryName string) {
-	resp, err := http.Get(fmt.Sprintf("http://%s/%s/repositories/%s/tags", srcRegistry, apiVer, repositoryName))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	var tags = make(map[string]string)
-	err = ffjson.Unmarshal(b, &tags)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for k, value := range tags {
-		//		pullCmd := fmt.Sprintf("docker pull %s/%s:%s", srcRegistry, repositoryName, k)
-		//		fmt.Println(pullCmd)
-		tagCmd := fmt.Sprintf("docker tag %s %s/%s:%s", value, dstRegistry, repositoryName, k)
-		fmt.Println(tagCmd)
-		pushCmd := fmt.Sprintf("docker push %s/%s:%s", dstRegistry, repositoryName, k)
-		fmt.Println(pushCmd)
-	}
+	r.GetRepositories("")
+	r.Save("rancher.sh")
 }
