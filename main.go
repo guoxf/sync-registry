@@ -44,5 +44,6 @@ func main() {
 		m:       make(map[string][]string),
 	}
 	r.GetRepositories("")
+	r.SaveBeautiful("rancher-beautiful.sh")
 	r.Save("rancher.sh")
 }

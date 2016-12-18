@@ -87,6 +87,11 @@ func (r *DockerRegistry) GetTags(repositoryName string) {
 	}
 
 	for _, m := range tags.Results {
+		name := m["name"].(string)
+		if strings.Contains(name, "-rc") {
+			fmt.Println(name)
+			continue
+		}
 		r.m[repositoryName] = append(r.m[repositoryName], m["name"].(string))
 		src := fmt.Sprintf("%v/%v:%v", orgname, repositoryName, m["name"])
 		dst := fmt.Sprintf("%v/%v/%v:%v", dstRegistry, orgname, repositoryName, m["name"])
@@ -101,7 +106,39 @@ func (r *DockerRegistry) GetTags(repositoryName string) {
 
 		pushCmd := fmt.Sprintf("docker push %v", dst)
 		r.results = append(r.results, pushCmd)
+		return
 	}
+}
+
+func (r *DockerRegistry) SaveBeautiful(fileName string) {
+	imageNames := make([]string, 0)
+	count := 0
+	for k, v := range r.m {
+		if len(v) == 0 {
+			continue
+		}
+		imageNames = append(imageNames, fmt.Sprintf("%v:%v", k, v[0]))
+		count++
+		if count%5 == 0 {
+			imageNames = append(imageNames, "\\ \n ")
+		}
+	}
+	tpl := `
+function pullRancherImage(){
+	images=(%v)
+	for imageName in ${images[@]} ; do
+		docker pull {{orgname}}/$imageName
+        docker tag {{orgname}}/$imageName {{regdst}}/{{orgname}}/$imageName
+        docker push {{regdst}}/{{orgname}}/$imageName
+		docker rmi {{orgname}}/$imageName
+		docker rmi {{regdst}}/{{orgname}}/$imageName
+    done
+}
+	`
+	tpl = fmt.Sprintf(tpl, strings.Join(imageNames, " "))
+	tpl = strings.Replace(tpl, "{{orgname}}", orgname, -1)
+	tpl = strings.Replace(tpl, "{{regdst}}", dstRegistry, -1)
+	ioutil.WriteFile(fileName, []byte(tpl), os.ModePerm)
 }
 
 func (r *DockerRegistry) Save(fileName string) {
