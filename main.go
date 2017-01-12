@@ -1,6 +1,7 @@
 package main
 
 import "flag"
+import "fmt"
 
 var (
 	srcRegistry = "127.0.0.1:5000"
@@ -44,6 +45,6 @@ func main() {
 		m:       make(map[string][]string),
 	}
 	r.GetRepositories("")
-	r.SaveBeautiful("rancher-beautiful.sh")
-	r.Save("rancher.sh")
+	r.SaveBeautiful(fmt.Sprintf("%s-beautiful.sh", orgname))
+	r.Save(fmt.Sprintf("%s.sh", orgname))
 }

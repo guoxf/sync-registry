@@ -88,7 +88,7 @@ func (r *DockerRegistry) GetTags(repositoryName string) {
 
 	for _, m := range tags.Results {
 		name := m["name"].(string)
-		if strings.Contains(name, "-rc") {
+		if strings.Contains(name, "-rc") || strings.Contains(name, "stable") || strings.Contains(name, "-pre") || strings.Contains(name, "-dev") || strings.Contains(name, "-dec") {
 			fmt.Println(name)
 			continue
 		}
@@ -96,7 +96,7 @@ func (r *DockerRegistry) GetTags(repositoryName string) {
 		src := fmt.Sprintf("%v/%v:%v", orgname, repositoryName, m["name"])
 		dst := fmt.Sprintf("%v/%v/%v:%v", dstRegistry, orgname, repositoryName, m["name"])
 
-		pullCmd := fmt.Sprintf("docker pull %s/%s", srcRegistry, src)
+		pullCmd := fmt.Sprintf("docker pull %s", src)
 		r.results = append(r.results, pullCmd)
 		fmt.Println(pullCmd)
 
@@ -130,6 +130,8 @@ function pullRancherImage(){
 		docker pull {{orgname}}/$imageName
         docker tag {{orgname}}/$imageName {{regdst}}/{{orgname}}/$imageName
         docker push {{regdst}}/{{orgname}}/$imageName
+    done
+	for imageName in ${images[@]} ; do
 		docker rmi {{orgname}}/$imageName
 		docker rmi {{regdst}}/{{orgname}}/$imageName
     done
